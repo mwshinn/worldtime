@@ -1,5 +1,6 @@
 <html>
-    <!-- Worldti.me -->
+  <!-- Worldti.me -->
+  <!-- Copyright 2020 Max Shinn, available under the GPLv3.0 -->
   <head>
       <title>Timezone converter</title>
     <link rel="stylesheet" href="res-tz/new.css">
@@ -55,116 +56,117 @@
       </div>
     </div>
     <script>
-     // Global variables
-     timezones = moment.tz.names();
-     curr_tz = moment.tz.guess();
-     BASE62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-     // Encoding functions
-     function to_base62(td, tz, hasdate) {
-         //tdu = td.utc()
-         tdu = td;
-         formstr = hasdate ? "0" : "1";
-         formstr += BASE62[tdu.hour()];
-         formstr += BASE62[tdu.minute()];
-         tznum = moment.tz.names().indexOf(tz);
-         formstr += BASE62[parseInt(tznum/62)];
+      // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
+      // Global variables
+      timezones = moment.tz.names();
+      curr_tz = moment.tz.guess();
+      BASE62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      // Encoding functions
+      function to_base62(td, tz, hasdate) {
+          //tdu = td.utc()
+          tdu = td;
+          formstr = hasdate ? "0" : "1";
+          formstr += BASE62[tdu.hour()];
+          formstr += BASE62[tdu.minute()];
+          tznum = moment.tz.names().indexOf(tz);
+          formstr += BASE62[parseInt(tznum/62)];
          formstr += BASE62[tznum % 62];
-         if (hasdate) {
-             formstr += BASE62[parseInt(tdu.year()/62)];
-             formstr += BASE62[tdu.year() % 62];
-             formstr += BASE62[tdu.month()];
-             formstr += BASE62[tdu.date()];
-         }
-         return formstr;
-     }
-     function from_base62(s) {
-         if (s[0] != "0" && s[0] != "1") { return false; }
-         hour24 = BASE62.indexOf(s[1]);
-         minute = BASE62.indexOf(s[2]);
-         tznum1 = BASE62.indexOf(s[3]);
-         tznum2 = BASE62.indexOf(s[4]);
-         tz = moment.tz.names()[tznum1*62 + tznum2];
-         if (s[0] == "0") {
-             year1 = BASE62.indexOf(s[5]);
-             year2 = BASE62.indexOf(s[6]);
-             year = year1 * 62 + year2;
-             month = BASE62.indexOf(s[7]);
-             day = BASE62.indexOf(s[8]);
-         } else if (s[0] == "1") {
-             year = moment().year();
-             month = moment().month();
-             day = moment().date();
-         }
-         return moment.tz(tz).year(year).month(month).date(day).hour(hour24).minute(minute);
-     }
-     function get_base62() {
-         hours = Number(document.getElementById("hour").value);
-         minute = document.getElementById("minute").value;
-         date = document.getElementById("date").value;
-         ampm = document.getElementById("ampm").value;
-         tz = document.getElementById("timezone").value;
-         if (date) {
-             timedate = moment.tz(date, "YYYY-MM-DD", tz);
-             hasdate = true;
-         } else {
-             timedate = moment.tz(tz);
-             hasdate = false;
-         }
-         hours24 = (ampm == "AM" ? hours : hours + 12);
-         timedate.minutes(minute).hours(hours24);
-         return to_base62(timedate, tz, hasdate);
-     }
-     function getlink() {
-         base62 = get_base62();
-         //window.location.href = "./"+base62;
-         genlink = document.getElementById("generatedlink");
-         genlink.innerHTML = "https://worldti.me/"+base62;
-         genlink.href = "https://worldti.me/"+base62;
-         return false;
-     }
-     // Set up the form
-     var select = document.getElementById("timezone");
-     for (tz of timezones) {
+          if (hasdate) {
+              formstr += BASE62[parseInt(tdu.year()/62)];
+              formstr += BASE62[tdu.year() % 62];
+              formstr += BASE62[tdu.month()];
+              formstr += BASE62[tdu.date()];
+          }
+          return formstr;
+      }
+      function from_base62(s) {
+          if (s[0] != "0" && s[0] != "1") { return false; }
+          hour24 = BASE62.indexOf(s[1]);
+          minute = BASE62.indexOf(s[2]);
+          tznum1 = BASE62.indexOf(s[3]);
+          tznum2 = BASE62.indexOf(s[4]);
+          tz = moment.tz.names()[tznum1*62 + tznum2];
+          if (s[0] == "0") {
+              year1 = BASE62.indexOf(s[5]);
+              year2 = BASE62.indexOf(s[6]);
+              year = year1 * 62 + year2;
+              month = BASE62.indexOf(s[7]);
+              day = BASE62.indexOf(s[8]);
+          } else if (s[0] == "1") {
+              year = moment().year();
+              month = moment().month();
+              day = moment().date();
+          }
+          return moment.tz(tz).year(year).month(month).date(day).hour(hour24).minute(minute);
+      }
+      function get_base62() {
+          hours = Number(document.getElementById("hour").value);
+          minute = document.getElementById("minute").value;
+          date = document.getElementById("date").value;
+          ampm = document.getElementById("ampm").value;
+          tz = document.getElementById("timezone").value;
+          if (date) {
+              timedate = moment.tz(date, "YYYY-MM-DD", tz);
+              hasdate = true;
+          } else {
+              timedate = moment.tz(tz);
+              hasdate = false;
+          }
+          hours24 = (ampm == "AM" ? hours : hours + 12);
+          timedate.minutes(minute).hours(hours24);
+          return to_base62(timedate, tz, hasdate);
+      }
+      function getlink() {
+          base62 = get_base62();
+          //window.location.href = "./"+base62;
+          genlink = document.getElementById("generatedlink");
+          genlink.innerHTML = "https://worldti.me/"+base62;
+          genlink.href = "https://worldti.me/"+base62;
+          return false;
+      }
+      // Set up the form
+      var select = document.getElementById("timezone");
+      for (tz of timezones) {
           var opt = document.createElement("option");
           opt.value = tz;
           opt.textContent = tz;
           select.appendChild(opt);
       }
-     select.selectedIndex = timezones.indexOf(curr_tz);
+      select.selectedIndex = timezones.indexOf(curr_tz);
       // Parse GET parameters
-     var url = new URL(window.location.href);
-     var codedtime = url.searchParams.get("t"); // For debugging
-     if (!codedtime) {
-         var splits = window.location.href.split("/");
-         var codedtime = splits[splits.length-1];
-     }
-     if (codedtime[0] == "0" || codedtime[0] == "1") {
-         var eventtime = from_base62(codedtime);
-         var hasdate = codedtime[0] == "0";
-         document.getElementById("picker").hidden = true;
-         document.getElementById("displaytime").hidden = false;
-         var drawTable = true;
-     } else {
-         document.getElementById("picker").hidden = false;
-         document.getElementById("displaytime").hidden = true;
-         var drawTable = false;
-     }
-     if (drawTable) {
-         // Set local and organizer time
-         var display_format = hasdate ? "MMM Do YYYY h:mm A" : "h:mm A"
-         document.getElementById("organizertimezone").innerHTML = "("+eventtime.tz(tz).format('z')+")";
-         document.getElementById("localtimezone").innerHTML = "("+eventtime.tz(curr_tz).format('z')+")";
-         document.getElementById("organizertime").innerHTML = eventtime.tz(tz).format(display_format);
-         document.getElementById("localtime").innerHTML = eventtime.tz(curr_tz).format(display_format);
-         // Add timezones to the table
-         var timetable = document.getElementById('timetable');
-         for (tztz of timezones) {
-             var row = timetable.insertRow(-1);
-             row.insertCell(-1).innerHTML = tztz;
-             row.insertCell(-1).innerHTML = eventtime.tz(tztz).format(display_format);
-         }
-     }
-
+      var url = new URL(window.location.href);
+      var codedtime = url.searchParams.get("t"); // For debugging
+      if (!codedtime) {
+          var splits = window.location.href.split("/");
+          var codedtime = splits[splits.length-1];
+      }
+      if (codedtime[0] == "0" || codedtime[0] == "1") {
+          var eventtime = from_base62(codedtime);
+          var hasdate = codedtime[0] == "0";
+          document.getElementById("picker").hidden = true;
+          document.getElementById("displaytime").hidden = false;
+          var drawTable = true;
+      } else {
+          document.getElementById("picker").hidden = false;
+          document.getElementById("displaytime").hidden = true;
+          var drawTable = false;
+      }
+      if (drawTable) {
+          // Set local and organizer time
+          var display_format = hasdate ? "MMM Do YYYY h:mm A" : "h:mm A"
+          document.getElementById("organizertimezone").innerHTML = "("+eventtime.tz(tz).format('z')+")";
+          document.getElementById("localtimezone").innerHTML = "("+eventtime.tz(curr_tz).format('z')+")";
+          document.getElementById("organizertime").innerHTML = eventtime.tz(tz).format(display_format);
+          document.getElementById("localtime").innerHTML = eventtime.tz(curr_tz).format(display_format);
+          // Add timezones to the table
+          var timetable = document.getElementById('timetable');
+          for (tztz of timezones) {
+              var row = timetable.insertRow(-1);
+              row.insertCell(-1).innerHTML = tztz;
+              row.insertCell(-1).innerHTML = eventtime.tz(tztz).format(display_format);
+          }
+      }
+      
       // Show all
       document.getElementById("showalllink").onclick = function() {
           document.getElementById("showalllink").hidden = true;
@@ -177,6 +179,7 @@
           minDate: new Date(),
           format: 'YYYY-MM-DD'
       })
+      // @license-end
     </script>
   </body>
 </html>
