@@ -2,7 +2,7 @@
   <!-- Worldti.me -->
   <!-- Copyright 2020 Max Shinn, available under the GPLv3.0 -->
   <head>
-      <title>Timezone converter</title>
+      <title>Worldti.me timezone converter - Permalink to the time</title>
     <link rel="stylesheet" href="res-tz/new.css">
     <link rel="stylesheet" href="res-tz/pikaday.min.css">
     <script src="res-tz/moment.min.js"></script>
@@ -11,18 +11,19 @@
   </head>
   <body>
     <header>
-        <h1>Worldti.me</h1>
+        <h1><a href="https://worldti.me" style="text-decoration: none; color: var(--nc-tx-1)">Worldti.me</a></h1>
         <nav>
-            <span style="margin-right: 1em">Link to the time</span>
+            <span style="margin-right: 1em">Permalink to a time and date</span>
             <a href="./">New time</a> /
+            <a href="./about">About</a> /
             <!--<a href="./">Calendar invite</a> /-->
             <a href="https://github.com/mwshinn/worldtime">Source</a>
         </nav>
     </header>
     <div class="container">
       <div id="picker">
-        <p>Select the time for a URL which
-          shows this time in any timezone.</p>
+        <p>Generate a URL which
+          shows the time in any timezone.</p>
         <form action="/" method="get" onsubmit="return getlink()">
           Time: <input type="text" placeholder="HH" id="hour" size="2" />
           :
@@ -30,6 +31,7 @@
           <select id="ampm">
             <option value="AM">AM</option>
             <option value="PM">PM</option>
+            <option value="24h">24h</option>
           </select>
           <br />
           Date: <input placeholder="(optional)" type="text" id="date" />
@@ -37,9 +39,11 @@
           Timezone: <select class="u-full-width" id="timezone" />
             <!--Will be filled in js-->
           </select> <br />
-          <input type="submit" id="genlinkbutton" value="Generate link" /> <a style="margin-left: 1em;" id="generatedlink">&nbsp;</a>
+          <input type="submit" id="genlinkbutton" value="Generate link" /> <a style="margin-left: 1em;" id="generatedlink">&nbsp;</a> <span style="color: red" id="errorgentext"></span>
         </form>
       </div> <!--picker-->
+      <div style="color: red" hidden="true" id="urlerror">URL error</div>
+      <div style="color: red" id="jserror">Please enable javascript</div>
       <div id="displaytime" hidden="true">
         <h2>Your time <span id="localtimezone"></span>: <span id="localtime"></span></h2>
         <p>Organizer's time <span id="organizertimezone"></span>: <span id="organizertime"></span></p>
@@ -57,6 +61,8 @@
     </div>
     <script>
       // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
+      // Hide javascript warning
+      document.getElementById("jserror").hidden = true;
       // Global variables
       timezones = moment.tz.names();
       curr_tz = moment.tz.guess();
@@ -112,16 +118,72 @@
               timedate = moment.tz(tz);
               hasdate = false;
           }
-          hours24 = (ampm == "AM" ? hours : hours + 12);
+          if (ampm == "PM") {
+              if (hours != 12) {
+                  hours24 = hours + 12;
+              } else {
+                  hours24 = hours;
+              }
+          } else if (ampm == "AM") {
+              if (hours != 12) {
+                  hours24 = hours;
+              } else {
+                  hours24 = hours - 12;
+              }
+          } else {
+              hours24 = hours;
+          }
           timedate.minutes(minute).hours(hours24);
           return to_base62(timedate, tz, hasdate);
       }
+      function validate() {
+          hours = Number(document.getElementById("hour").value);
+          minute = Number(document.getElementById("minute").value)
+          date = document.getElementById("date").value;
+          ampm = document.getElementById("ampm").value;
+          tz = document.getElementById("timezone").value;
+          // Validate hour
+          if (ampm == "AM" || ampm == "PM") {
+              if (!(hours >= 1 && hours <= 12)) return false;
+          } else if (ampm == "24h") {
+              if (!(hours >= 0 && hours < 24)) return false;
+          } else {
+              return false;
+          }
+          // Validate minute
+          if (!(minute >= 0 && minute < 60)) return false;
+          // Validate date
+          if (date.length != 0) {
+              if (date.length != 10) return false;
+              year = Number(date.substr(0, 4));
+              if (!(year >= 0 && year <= 62*62)) return false;
+              month = Number(date.substr(5, 2));
+              if (!(month >= 1 && month <= 12)) return false;
+              dateobj = moment(date);
+              if (!dateobj.isValid()) return false;
+          }
+          // Validate timezone
+          if (timezones.indexOf(tz) == -1) return false;
+          // All's good!
+          return true;
+      }
+          
       function getlink() {
-          base62 = get_base62();
-          //window.location.href = "./"+base62;
-          genlink = document.getElementById("generatedlink");
-          genlink.innerHTML = "https://worldti.me/"+base62;
-          genlink.href = "https://worldti.me/"+base62;
+          if (validate()) {
+              base62 = get_base62();
+              //window.location.href = "./"+base62;
+              genlink = document.getElementById("generatedlink");
+              genlink.innerHTML = "https://worldti.me/"+base62;
+              genlink.href = "https://worldti.me/"+base62;
+              errorgentext = document.getElementById("errorgentext");
+              errorgentext.innerHTML = "";
+          } else {
+              genlink = document.getElementById("generatedlink");
+              genlink.innerHTML = "";
+              genlink.href = "";
+              errorgentext = document.getElementById("errorgentext");
+              errorgentext.innerHTML = "Error, please check time";
+          }
           return false;
       }
       // Set up the form
@@ -140,12 +202,17 @@
           var splits = window.location.href.split("/");
           var codedtime = splits[splits.length-1];
       }
-      if (codedtime[0] == "0" || codedtime[0] == "1") {
+      if ((codedtime[0] == "0" && codedtime.length == 9) ||
+          (codedtime[0] == "1" && codedtime.length == 5)) {
           var eventtime = from_base62(codedtime);
           var hasdate = codedtime[0] == "0";
           document.getElementById("picker").hidden = true;
           document.getElementById("displaytime").hidden = false;
           var drawTable = true;
+      } else if (codedtime[0] == "0" || codedtime[0] == "1") {
+          document.getElementById("urlerror").hidden = false;
+          document.getElementById("picker").hidden = true;
+          document.getElementById("displaytime").hidden = true;
       } else {
           document.getElementById("picker").hidden = false;
           document.getElementById("displaytime").hidden = true;
@@ -169,7 +236,7 @@
       
       // Show all
       document.getElementById("showalllink").onclick = function() {
-          document.getElementById("showalllink").hidden = true;
+          document.getElementById("showalllink").style.display = 'none';
           document.getElementById("timetable").hidden = false;
           return false;
       }
