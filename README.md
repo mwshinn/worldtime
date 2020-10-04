@@ -16,3 +16,4 @@ Worldti.me includes the following libraries:
 - [new.css](https://github.com/xz/new.css)
 - [Moment](https://github.com/moment/moment/)
 - [Moment timezone](https://github.com/moment/moment-timezone)
+- [Pikaday](https://github.com/Pikaday/Pikaday)
