@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <!-- Worldti.me -->
   <!-- Copyright 2020 Max Shinn, available under the GPLv3.0 -->
   <head>
@@ -36,19 +37,19 @@
           <br />
           Date: <input placeholder="(optional)" type="text" id="date" />
           <br />
-          Timezone: <select class="u-full-width" id="timezone" />
+          Timezone: <select class="u-full-width" id="timezone">
             <!--Will be filled in js-->
           </select> <br />
           <input type="submit" id="genlinkbutton" value="Generate link" /> <a style="margin-left: 1em;" id="generatedlink">&nbsp;</a> <span style="color: red" id="errorgentext"></span>
         </form>
       </div> <!--picker-->
-      <div style="color: red" hidden="true" id="urlerror">URL error</div>
+      <div style="color: red" hidden id="urlerror">URL error</div>
       <div style="color: red" id="jserror">Please enable javascript</div>
-      <div id="displaytime" hidden="true">
+      <div id="displaytime" hidden>
         <h2>Your time <span id="localtimezone"></span>: <span id="localtime"></span></h2>
         <p>Organizer's time <span id="organizertimezone"></span>: <span id="organizertime"></span></p>
         <p><button id="showalllink">Time in other locations</button></p>
-        <table id="timetable" hidden="true">
+        <table id="timetable" hidden>
           <thead>
             <tr>
               <th>Location</th>
