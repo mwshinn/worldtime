@@ -3,34 +3,56 @@ Source code for worldti.me
 
 [Worldti.me](https://worldti.me) provides a short URL for a specific
 time, which is automatically converted across timezones.  The site is
-a single HTML page, with all content generated dynamically with
-javascript.
+static, with all conversion done browser-side in JavaScript.
 
-Worldti.me is lightweight: total size (including libraries) is about
-135kb (about 44kb compressed).
+Worldti.me does not use an external timezone API.  Timezone accuracy
+comes from the browser's local IANA timezone data, exposed through the
+standard `Intl` APIs.  A current browser with `Intl.DateTimeFormat` and
+`Intl.supportedValuesOf("timeZone")` gives the full timezone picker; if
+the picker API is unavailable, the app falls back to UTC and the
+browser's local timezone.
+
+Permalinks store the selected time and a compact slug for the
+organizer's IANA timezone.  If a date is selected, the permalink stores
+the exact UTC minute of the event.  If no date is selected, the
+permalink stores only the wall-clock time and timezone.  For example,
+`Europe/London` is stored as `e-London`, and `America/New_York` is
+stored as `a-New_York`.
+
+If no date is selected, Worldti.me uses today's date in the selected
+timezone when the link is opened, and displays only the time.
+
+Worldti.me is lightweight: deployed files are about 34kb before HTTP
+compression.
 
 Available under the GPLv3.0 or later.
 
-Worldti.me includes the following libraries:
+Worldti.me includes the following library:
 
 - [new.css](https://github.com/xz/new.css)
-- [Moment](https://github.com/moment/moment/)
-- [Moment timezone](https://github.com/moment/moment-timezone)
-- [Pikaday](https://github.com/Pikaday/Pikaday)
+
+
+Testing
+-------
+
+Run the timezone and URL tests with:
+
+```
+node test-worldtime.js
+```
 
 
 Alternatives
-~~~~~~~~~~~~
+------------
 
 If you don't like [worldti.me](https://worldti.me), you may prefer
 [starts-at.com](https://www.starts-at.com).  However, we think worldti.me has
 several advantages:
 
-- Shorter URLs (20 chars vs about 60 chars)
-- About 10x more lightweight (compressed: 44kb vs 495kb, uncompressed: 135kb vs
-  1180kb)
-- No tracking (starts-at.com uses Google Analytics which explicitly tracks
-  users, and the Cloudflare/Boostrap/Google CDNs which implicitly track users)
+- Short URLs
+- Lightweight static files
+- No tracking
+- No external timezone API
 - Picking a date is optional
 - Open source
 - Cleaner design (in our opinion!)

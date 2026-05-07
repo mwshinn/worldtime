@@ -1,54 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
   <!-- Worldti.me -->
-  <!-- Copyright 2020 Max Shinn, available under the GPLv3.0 -->
+  <!-- Copyright 2020-2026 Max Shinn, available under the GPLv3.0 -->
   <head>
-      <title>Worldti.me timezone converter - Permalink to the time</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Worldti.me timezone converter - Permalink to the time</title>
     <link rel="stylesheet" href="res-tz/new.css">
-    <link rel="stylesheet" href="res-tz/pikaday.min.css">
-    <script src="res-tz/moment.min.js"></script>
-    <script src="res-tz/moment-timezone-with-data-10-year-range.min.js"></script>
-    <script src="res-tz/pikaday.min.js"></script>
+    <style>
+      .stack { display: grid; gap: 0.85rem; max-width: 42rem; }
+      .form-row { display: grid; gap: 0.35rem; }
+      [hidden] { display: none !important; }
+      .inline-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 0.75rem; }
+      .generated-link-box { background: var(--nc-bg-2); border: 1px solid var(--nc-bg-3); border-left: 0.35rem solid var(--nc-ac-1); padding: 0.65rem 0.8rem; }
+      .generated-link-label { color: var(--nc-tx-2); font-size: 0.9rem; margin-bottom: 0.2rem; }
+      .generated-link { font-family: monospace; overflow-wrap: anywhere; }
+      .error { color: #c62828; }
+      .result-lines { margin-block: 1.5rem; }
+      .primary-result, .secondary-result { overflow: visible; white-space: nowrap; }
+      .primary-result { font-size: 2.6rem; font-weight: 700; line-height: 1.15; margin-block: 0 0.45rem; }
+      .secondary-result, .zone-note { color: var(--nc-tx-2); }
+      .secondary-result { font-size: 1.2rem; line-height: 1.35; margin-block: 0; }
+      .timezone-combobox { position: relative; }
+      .timezone-options { background: var(--nc-bg-1); border: 1px solid var(--nc-bg-3); left: 0; max-height: 16rem; overflow-y: auto; position: absolute; right: 0; top: calc(100% + 0.25rem); z-index: 10; }
+      .timezone-option { cursor: pointer; padding: 0.35rem 0.55rem; }
+      .timezone-option[aria-selected="true"], .timezone-option:hover { background: var(--nc-bg-2); }
+      fieldset { border: 1px solid var(--nc-bg-3); }
+      fieldset label { display: block; margin-block: 0.35rem; }
+      table { font-variant-numeric: tabular-nums; }
+      .table-filter { margin-block: 1rem 0.5rem; max-width: 24rem; }
+      #timetable thead th { background: var(--nc-bg-2); border-bottom: 2px solid var(--nc-bg-3); color: var(--nc-tx-1); }
+    </style>
   </head>
   <body>
     <header>
-        <h1><a href="https://worldti.me" style="text-decoration: none; color: var(--nc-tx-1)">Worldti.me</a></h1>
-        <nav>
-            <span style="margin-right: 1em">Permalink to a time and date</span>
-            <a href="./">New time</a> /
-            <a href="./about">About</a> /
-            <!--<a href="./">Calendar invite</a> /-->
-            <a href="https://github.com/mwshinn/worldtime">Source</a>
-        </nav>
+      <h1><a href="https://worldti.me" style="text-decoration: none; color: var(--nc-tx-1)">Worldti.me</a></h1>
+      <nav>
+        <span style="margin-right: 1em">Permalink to a time and date</span>
+        <a href="./">New time</a> /
+        <a href="./about">About</a> /
+        <a href="https://github.com/mwshinn/worldtime">Source</a>
+      </nav>
     </header>
-    <div class="container">
-      <div id="picker">
-        <p>Generate a URL which
-          shows the time in any timezone.</p>
-        <form action="/" method="get" onsubmit="return getlink()">
-          Time: <input type="text" placeholder="HH" id="hour" size="2" />
-          :
-          <input type="text" placeholder="00" id="minute" size="2" />
-          <select id="ampm">
-            <option value="AM">AM</option>
-            <option value="PM">PM</option>
-            <option value="24h">24h</option>
-          </select>
-          <br />
-          Date: <input placeholder="(optional)" type="text" id="date" />
-          <br />
-          Timezone: <select class="u-full-width" id="timezone">
-            <!--Will be filled in js-->
-          </select> <br />
-          <input type="submit" id="genlinkbutton" value="Generate link" /> <a style="margin-left: 1em;" id="generatedlink">&nbsp;</a> <span style="color: red" id="errorgentext"></span>
+
+    <main class="container">
+      <section id="picker">
+        <p>Generate a URL which shows the time in any timezone.</p>
+        <form class="stack" id="time-form" action="/" method="get" novalidate>
+          <label class="form-row">
+            <span>Time</span>
+            <input type="time" id="time" step="60" required>
+          </label>
+
+          <label class="form-row">
+            <span>Date <span class="zone-note">(optional)</span></span>
+            <input type="date" id="date" min="1970-01-01" max="9999-12-31">
+          </label>
+
+          <div class="form-row timezone-combobox">
+            <label for="timezone">Timezone</label>
+            <input type="search" id="timezone" placeholder="Search timezone" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="timezone-options">
+            <div class="timezone-options" id="timezone-options" role="listbox" hidden></div>
+          </div>
+
+          <fieldset id="ambiguity" hidden></fieldset>
+
+          <div class="generated-link-box" id="generatedlinkbox" hidden>
+            <div class="generated-link-label">Generated link</div>
+            <a class="generated-link" id="generatedlink"></a>
+          </div>
+
+          <div class="inline-actions" id="copylinkrow" hidden>
+            <button type="button" id="copylinkbutton" disabled>Copy link</button>
+            <span class="zone-note" id="copystatus" aria-live="polite"></span>
+          </div>
+
+          <div class="error" id="errorgentext" role="alert"></div>
         </form>
-      </div> <!--picker-->
-      <div style="color: red" hidden id="urlerror">URL error</div>
-      <div style="color: red" id="jserror">Please enable javascript</div>
-      <div id="displaytime" hidden>
-        <h2>Your time <span id="localtimezone"></span>: <span id="localtime"></span></h2>
-        <p>Organizer's time <span id="organizertimezone"></span>: <span id="organizertime"></span></p>
-        <p><button id="showalllink">Time in other locations</button></p>
+      </section>
+
+      <div class="error" hidden id="urlerror" role="alert">Error, invalid link</div>
+      <div class="error" id="jserror" role="alert">Please enable javascript</div>
+
+      <section id="displaytime" hidden>
+        <div class="result-lines">
+          <p class="primary-result" id="localdisplay"></p>
+          <p class="secondary-result" id="organizerdisplay"></p>
+        </div>
+
+        <p><button type="button" id="showalllink">Time in other locations</button></p>
+        <label class="form-row table-filter" id="tablefilterrow" hidden>
+          <span>Filter locations</span>
+          <input type="search" id="tablefilter" placeholder="Search locations" autocomplete="off">
+        </label>
         <table id="timetable" hidden>
           <thead>
             <tr>
@@ -56,197 +100,15 @@
               <th>Time</th>
             </tr>
           </thead>
+          <tbody></tbody>
         </table>
-        
-      </div>
-    </div>
+      </section>
+    </main>
+
+    <script src="res-tz/worldtime.js"></script>
     <script>
       // @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
-      // Hide javascript warning
-      document.getElementById("jserror").hidden = true;
-      // Global variables
-      timezones = moment.tz.names();
-      curr_tz = moment.tz.guess();
-      BASE62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      // Encoding functions
-      function to_base62(td, tz, hasdate) {
-          //tdu = td.utc()
-          tdu = td;
-          formstr = hasdate ? "0" : "1";
-          formstr += BASE62[tdu.hour()];
-          formstr += BASE62[tdu.minute()];
-          tznum = moment.tz.names().indexOf(tz);
-          formstr += BASE62[parseInt(tznum/62)];
-         formstr += BASE62[tznum % 62];
-          if (hasdate) {
-              formstr += BASE62[parseInt(tdu.year()/62)];
-              formstr += BASE62[tdu.year() % 62];
-              formstr += BASE62[tdu.month()];
-              formstr += BASE62[tdu.date()];
-          }
-          return formstr;
-      }
-      function from_base62(s) {
-          if (s[0] != "0" && s[0] != "1") { return false; }
-          hour24 = BASE62.indexOf(s[1]);
-          minute = BASE62.indexOf(s[2]);
-          tznum1 = BASE62.indexOf(s[3]);
-          tznum2 = BASE62.indexOf(s[4]);
-          tz = moment.tz.names()[tznum1*62 + tznum2];
-          if (s[0] == "0") {
-              year1 = BASE62.indexOf(s[5]);
-              year2 = BASE62.indexOf(s[6]);
-              year = year1 * 62 + year2;
-              month = BASE62.indexOf(s[7]);
-              day = BASE62.indexOf(s[8]);
-          } else if (s[0] == "1") {
-              year = moment().year();
-              month = moment().month();
-              day = moment().date();
-          }
-          return moment.tz(tz).year(year).month(month).date(day).hour(hour24).minute(minute);
-      }
-      function get_base62() {
-          hours = Number(document.getElementById("hour").value);
-          minute = document.getElementById("minute").value;
-          date = document.getElementById("date").value;
-          ampm = document.getElementById("ampm").value;
-          tz = document.getElementById("timezone").value;
-          if (date) {
-              timedate = moment.tz(date, "YYYY-MM-DD", tz);
-              hasdate = true;
-          } else {
-              timedate = moment.tz(tz);
-              hasdate = false;
-          }
-          if (ampm == "PM") {
-              if (hours != 12) {
-                  hours24 = hours + 12;
-              } else {
-                  hours24 = hours;
-              }
-          } else if (ampm == "AM") {
-              if (hours != 12) {
-                  hours24 = hours;
-              } else {
-                  hours24 = hours - 12;
-              }
-          } else {
-              hours24 = hours;
-          }
-          timedate.minutes(minute).hours(hours24);
-          return to_base62(timedate, tz, hasdate);
-      }
-      function validate() {
-          hours = Number(document.getElementById("hour").value);
-          minute = Number(document.getElementById("minute").value)
-          date = document.getElementById("date").value;
-          ampm = document.getElementById("ampm").value;
-          tz = document.getElementById("timezone").value;
-          // Validate hour
-          if (ampm == "AM" || ampm == "PM") {
-              if (!(hours >= 1 && hours <= 12)) return false;
-          } else if (ampm == "24h") {
-              if (!(hours >= 0 && hours < 24)) return false;
-          } else {
-              return false;
-          }
-          // Validate minute
-          if (!(minute >= 0 && minute < 60)) return false;
-          // Validate date
-          if (date.length != 0) {
-              if (date.length != 10) return false;
-              year = Number(date.substr(0, 4));
-              if (!(year >= 0 && year <= 62*62)) return false;
-              month = Number(date.substr(5, 2));
-              if (!(month >= 1 && month <= 12)) return false;
-              dateobj = moment(date);
-              if (!dateobj.isValid()) return false;
-          }
-          // Validate timezone
-          if (timezones.indexOf(tz) == -1) return false;
-          // All's good!
-          return true;
-      }
-          
-      function getlink() {
-          if (validate()) {
-              base62 = get_base62();
-              //window.location.href = "./"+base62;
-              genlink = document.getElementById("generatedlink");
-              genlink.innerHTML = "https://worldti.me/"+base62;
-              genlink.href = "https://worldti.me/"+base62;
-              errorgentext = document.getElementById("errorgentext");
-              errorgentext.innerHTML = "";
-          } else {
-              genlink = document.getElementById("generatedlink");
-              genlink.innerHTML = "";
-              genlink.href = "";
-              errorgentext = document.getElementById("errorgentext");
-              errorgentext.innerHTML = "Error, please check time";
-          }
-          return false;
-      }
-      // Set up the form
-      var select = document.getElementById("timezone");
-      for (tz of timezones) {
-          var opt = document.createElement("option");
-          opt.value = tz;
-          opt.textContent = tz;
-          select.appendChild(opt);
-      }
-      select.selectedIndex = timezones.indexOf(curr_tz);
-      // Parse GET parameters
-      var url = new URL(window.location.href);
-      var codedtime = url.searchParams.get("t"); // For debugging
-      if (!codedtime) {
-          var splits = window.location.href.split("/");
-          var codedtime = splits[splits.length-1];
-      }
-      if ((codedtime[0] == "0" && codedtime.length == 9) ||
-          (codedtime[0] == "1" && codedtime.length == 5)) {
-          var eventtime = from_base62(codedtime);
-          var hasdate = codedtime[0] == "0";
-          document.getElementById("picker").hidden = true;
-          document.getElementById("displaytime").hidden = false;
-          var drawTable = true;
-      } else if (codedtime[0] == "0" || codedtime[0] == "1") {
-          document.getElementById("urlerror").hidden = false;
-          document.getElementById("picker").hidden = true;
-          document.getElementById("displaytime").hidden = true;
-      } else {
-          document.getElementById("picker").hidden = false;
-          document.getElementById("displaytime").hidden = true;
-          var drawTable = false;
-      }
-      if (drawTable) {
-          // Set local and organizer time
-          var display_format = hasdate ? "MMM Do YYYY h:mm A" : "h:mm A"
-          document.getElementById("organizertimezone").innerHTML = "("+eventtime.tz(tz).format('z')+")";
-          document.getElementById("localtimezone").innerHTML = "("+eventtime.tz(curr_tz).format('z')+")";
-          document.getElementById("organizertime").innerHTML = eventtime.tz(tz).format(display_format);
-          document.getElementById("localtime").innerHTML = eventtime.tz(curr_tz).format(display_format);
-          // Add timezones to the table
-          var timetable = document.getElementById('timetable');
-          for (tztz of timezones) {
-              var row = timetable.insertRow(-1);
-              row.insertCell(-1).innerHTML = tztz;
-              row.insertCell(-1).innerHTML = eventtime.tz(tztz).format(display_format);
-          }
-      }
-      
-      // Show all
-      document.getElementById("showalllink").onclick = function() {
-          document.getElementById("showalllink").style.display = 'none';
-          document.getElementById("timetable").hidden = false;
-          return false;
-      }
-      // Calendar widget
-      var picker = new Pikaday({
-          field: document.getElementById('date'),
-          minDate: new Date(),
-          format: 'YYYY-MM-DD'
-      })
+      Worldtime.init();
       // @license-end
     </script>
   </body>
