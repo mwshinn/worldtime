@@ -19,12 +19,17 @@ assert.doesNotThrow(function () {
   Worldtime.init();
 });
 assert.equal(Worldtime.decodeTimeZoneSlug("z"), "UTC");
-assert.equal(Worldtime.encodeTimeZoneSlug("America/New_York"), "a-New_York");
+assert.equal(Worldtime.encodeTimeZoneSlug("Europe/London"), "ldn");
+assert.equal(Worldtime.decodeTimeZoneSlug("ldn"), "Europe/London");
+assert.equal(Worldtime.encodeTimeZoneSlug("America/New_York"), "nyc");
+assert.equal(Worldtime.decodeTimeZoneSlug("nyc"), "America/New_York");
 assert.equal(Worldtime.decodeTimeZoneSlug("a-New_York"), "America/New_York");
 assert.equal(
   Worldtime.decodeTimeZoneSlug("a-Argentina~Buenos_Aires"),
   "America/Argentina/Buenos_Aires"
 );
+assert.equal(Worldtime.encodeTimeZoneSlug("Etc/GMT+1"), "x-Etc~GMT%2B1");
+assert.equal(Worldtime.decodeTimeZoneSlug("x-Etc~GMT%2B1"), "Etc/GMT+1");
 
 assert.equal(
   iso(onlyInstant("America/New_York", {
@@ -85,7 +90,7 @@ assert.equal(
 );
 
 var token = Worldtime.encodePermalink(new Date("2026-05-07T20:00:00.000Z"), "Europe/London");
-assert.match(token, /^t[0-9A-Za-z]{6}-e-London$/);
+assert.match(token, /^t[0-9A-Za-z]{6}-ldn$/);
 
 var decoded = Worldtime.decodePermalink(token);
 assert.equal(decoded.timeZone, Worldtime.canonicalTimeZone("Europe/London"));
@@ -97,8 +102,8 @@ var noDateToken = Worldtime.encodePermalink(
   "Europe/London",
   false
 );
-assert.match(noDateToken, /^t[0-9A-Za-z]{2}-e-London$/);
-assert.equal(noDateToken, "tkk-e-London");
+assert.match(noDateToken, /^t[0-9A-Za-z]{2}-ldn$/);
+assert.equal(noDateToken, "tkk-ldn");
 
 var decodedNoDate = Worldtime.decodePermalink(noDateToken);
 assert.equal(decodedNoDate.includeDate, false);
@@ -106,6 +111,12 @@ assert.equal(decodedNoDate.hour, 21);
 assert.equal(decodedNoDate.minute, 0);
 assert.equal(decodedNoDate.timeZone, Worldtime.canonicalTimeZone("Europe/London"));
 assert.equal(decodedNoDate.instant, undefined);
+
+var decodedOldNoDate = Worldtime.decodePermalink("tkk-e-London");
+assert.equal(decodedOldNoDate.includeDate, false);
+assert.equal(decodedOldNoDate.hour, 21);
+assert.equal(decodedOldNoDate.minute, 0);
+assert.equal(decodedOldNoDate.timeZone, Worldtime.canonicalTimeZone("Europe/London"));
 
 var timeOnly = Worldtime.formatInstant(new Date("2026-05-07T20:00:00.000Z"), "Europe/London", false);
 assert.equal(timeOnly, "9:00 PM");

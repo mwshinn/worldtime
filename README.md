@@ -13,16 +13,17 @@ the picker API is unavailable, the app falls back to UTC and the
 browser's local timezone.
 
 Permalinks store the selected time and a compact slug for the
-organizer's IANA timezone.  If a date is selected, the permalink stores
-the exact UTC minute of the event.  If no date is selected, the
-permalink stores only the wall-clock time and timezone.  For example,
-`Europe/London` is stored as `e-London`, and `America/New_York` is
-stored as `a-New_York`.
+organizer's IANA timezone.  Common IANA zones use a 2-3 character code,
+with the older area/location slug as a fallback for zones outside the
+table.  If a date is selected, the permalink stores the exact UTC minute
+of the event.  If no date is selected, the permalink stores only the
+wall-clock time and timezone.  For example, `Europe/London` is stored as
+`ldn`, and `America/New_York` is stored as `nyc`.
 
 If no date is selected, Worldti.me uses today's date in the selected
 timezone when the link is opened, and displays only the time.
 
-Worldti.me is lightweight: deployed files are about 34kb before HTTP
+Worldti.me is lightweight: deployed files are about 56kb before HTTP
 compression.
 
 Available under the GPLv3.0 or later.
